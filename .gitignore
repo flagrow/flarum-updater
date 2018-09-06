@@ -1,0 +1,6 @@
+/builds
+/vendor
+/.idea
+/.vscode
+/.vagrant
+/database/database.sqlite
