@@ -46,12 +46,12 @@ class Update extends Command
         }
 
         if (($lock = $this->getComposerLock()) === null) {
-            $this->error("No composer.lock file found, it is need to verify your current installation status.");
+            $this->error("No vendor/composer/installed.json file found, it is need to verify your current installation status.");
             exit;
         }
 
-        if (! $this->confirm("Analysing Flarum releases and extension compatibility requires sending your composer.lock to Flagrow.io. Are you okay with us processing that information?")) {
-            $this->comment("Okay. We can't help you without that data :(").
+        if (! $this->confirm("Analysing Flarum releases and extension compatibility requires sending your vendor/composer/installed.json file to Flagrow.io. Are you okay with us processing that information?")) {
+            $this->comment("Okay, that is your right. This tool can't work without that file, sorry.").
             exit;
         }
 
@@ -78,8 +78,22 @@ class Update extends Command
         ]);
 
         $progress->finish();
+        $this->line('');
 
-        dd($response->getBody()->getContents());
+        $contents = $response->getBody()->getContents();
+
+        $listing = json_decode($contents, true);
+
+        $rows = [];
+
+        foreach($listing as $name => $compliance) {
+            $rows[] = [
+                'name' => $name,
+                'compliance' => $compliance === true ? 'latest' : "{$compliance[0]} -> {$compliance[1]}" .(!empty($compliance[2]) ? " (requires {$compliance[2]})" : null)
+            ];
+        }
+
+        $this->table(['package', 'compliance'], $rows);
     }
 
     /**
@@ -101,8 +115,8 @@ class Update extends Command
 
     private function getComposerLock(): ?string
     {
-        $lock = getcwd() . '/composer.lock';
+        $file = getcwd() . '/vendor/composer/installed.json';
 
-        return file_exists($lock) ? $lock : null;
+        return file_exists($file) ? $file : null;
     }
 }
