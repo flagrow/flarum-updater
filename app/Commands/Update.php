@@ -38,21 +38,21 @@ class Update extends Command
      *
      * @return void
      */
-    public function handle(): void
+    public function handle(): ?int
     {
         if (! $this->isValidFlarumInstallation()) {
             $this->error("No valid Flarum installation found at your current path.");
-            exit;
+            return 1;
         }
 
         if (($lock = $this->getComposerLock()) === null) {
             $this->error("No vendor/composer/installed.json file found, it is need to verify your current installation status.");
-            exit;
+            return 1;
         }
 
         if (! $this->confirm("Analysing Flarum releases and extension compatibility requires sending your vendor/composer/installed.json file to Flagrow.io. Are you okay with us processing that information?")) {
             $this->comment("Okay, that is your right. This tool can't work without that file, sorry.").
-            exit;
+            return 1;
         }
 
         /** @var ProgressBar $progress */
